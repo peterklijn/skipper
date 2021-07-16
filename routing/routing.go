@@ -64,7 +64,8 @@ type Options struct {
 	DataClients []DataClient
 
 	// Specifications of custom, user defined predicates.
-	Predicates []predicates.PredicateSpec
+	Predicates        []predicates.PredicateSpec
+	PredicateRegistry predicates.Registry
 
 	// Performance tuning option.
 	//

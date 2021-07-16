@@ -46,6 +46,14 @@ const (
 	TrafficName                    = "Traffic"
 )
 
+// Predicate instances are used as custom user defined route
+// matching predicates.
+type Predicate interface {
+
+	// Returns true if the request matches the predicate.
+	Match(*http.Request) bool
+}
+
 // PredicateSpec instances are used to create custom predicates
 // (of type Predicate) with concrete arguments during the
 // construction of the routing tree.
@@ -58,10 +66,8 @@ type PredicateSpec interface {
 	Create([]interface{}) (Predicate, error)
 }
 
-// Predicate instances are used as custom user defined route
-// matching predicates.
-type Predicate interface {
+type Registry map[string]PredicateSpec
 
-	// Returns true if the request matches the predicate.
-	Match(*http.Request) bool
+func (r Registry) Register(s PredicateSpec) {
+	r[s.Name()] = s
 }

@@ -39,6 +39,7 @@ import (
 	"github.com/zalando/skipper/logging"
 	"github.com/zalando/skipper/metrics"
 	pauth "github.com/zalando/skipper/predicates/auth"
+	pbuiltin "github.com/zalando/skipper/predicates/builtin"
 	"github.com/zalando/skipper/predicates/cookie"
 	"github.com/zalando/skipper/predicates/cron"
 	"github.com/zalando/skipper/predicates/interval"
@@ -1331,6 +1332,10 @@ func run(o Options, sig chan os.Signal, idleConnsCH chan struct{}) error {
 	}
 
 	// include bundled custom predicates
+	predicateRegistry := pbuiltin.MakeRegistry()
+	for _, p := range o.CustomPredicates {
+		predicateRegistry.Register(p)
+	}
 	o.CustomPredicates = append(o.CustomPredicates,
 		source.New(),
 		source.NewFromLast(),
@@ -1367,13 +1372,14 @@ func run(o Options, sig chan os.Signal, idleConnsCH chan struct{}) error {
 
 	// create a routing engine
 	ro := routing.Options{
-		FilterRegistry:  registry,
-		MatchingOptions: mo,
-		PollTimeout:     o.SourcePollTimeout,
-		DataClients:     dataClients,
-		Predicates:      o.CustomPredicates,
-		UpdateBuffer:    updateBuffer,
-		SuppressLogs:    o.SuppressRouteUpdateLogs,
+		FilterRegistry:    registry,
+		MatchingOptions:   mo,
+		PollTimeout:       o.SourcePollTimeout,
+		DataClients:       dataClients,
+		Predicates:        o.CustomPredicates,
+		PredicateRegistry: predicateRegistry,
+		UpdateBuffer:      updateBuffer,
+		SuppressLogs:      o.SuppressRouteUpdateLogs,
 		PostProcessors: []routing.PostProcessor{
 			loadbalancer.HealthcheckPostProcessor{LB: lbInstance},
 			loadbalancer.NewAlgorithmProvider(),

@@ -2,7 +2,6 @@ package routing
 
 import (
 	"fmt"
-	"github.com/zalando/skipper/predicates"
 	"net/url"
 	"sort"
 	"time"
@@ -10,7 +9,7 @@ import (
 	"github.com/zalando/skipper/eskip"
 	"github.com/zalando/skipper/filters"
 	"github.com/zalando/skipper/logging"
-	corepredicates "github.com/zalando/skipper/predicates/core"
+	"github.com/zalando/skipper/predicates"
 	weightpredicate "github.com/zalando/skipper/predicates/weight"
 )
 
@@ -263,28 +262,28 @@ func mergeLegacyNonTreePredicates(r *eskip.Route) (*eskip.Route, error) {
 
 		switch p.Name {
 		case predicates.HostRegexpName:
-			a, err := corepredicates.ValidateHostRegexpPredicate(p)
+			a, err := predicates.ValidateHostRegexpPredicate(p)
 			if err != nil {
 				return nil, err
 			}
 
 			c.HostRegexps = append(c.HostRegexps, a[0])
 		case predicates.PathRegexpName:
-			a, err := corepredicates.ValidatePathRegexpPredicate(p)
+			a, err := predicates.ValidatePathRegexpPredicate(p)
 			if err != nil {
 				return nil, err
 			}
 
 			c.PathRegexps = append(c.PathRegexps, a[0])
 		case predicates.MethodName:
-			a, err := corepredicates.ValidateMethodPredicate(p)
+			a, err := predicates.ValidateMethodPredicate(p)
 			if err != nil {
 				return nil, err
 			}
 
 			c.Method = a[0]
 		case predicates.HeaderName:
-			a, err := corepredicates.ValidateHeaderPredicate(p)
+			a, err := predicates.ValidateHeaderPredicate(p)
 			if err != nil {
 				return nil, err
 			}
@@ -295,7 +294,7 @@ func mergeLegacyNonTreePredicates(r *eskip.Route) (*eskip.Route, error) {
 
 			c.Headers[a[0]] = a[1]
 		case predicates.HeaderRegexpName:
-			a, err := corepredicates.ValidateHeaderRegexpPredicate(p)
+			a, err := predicates.ValidateHeaderRegexpPredicate(p)
 			if err != nil {
 				return nil, err
 			}
@@ -376,13 +375,13 @@ func processTreePredicates(r *Route, preds []*eskip.Predicate) error {
 	for _, p := range preds {
 		switch p.Name {
 		case predicates.PathName:
-			path, err := corepredicates.ProcessPathOrSubTree(p)
+			path, err := predicates.ProcessPathOrSubTree(p)
 			if err != nil {
 				return err
 			}
 			r.path = path
 		case predicates.PathSubtreeName:
-			pst, err := corepredicates.ProcessPathOrSubTree(p)
+			pst, err := predicates.ProcessPathOrSubTree(p)
 			if err != nil {
 				return err
 			}
@@ -435,7 +434,8 @@ func mapPredicates(cps []predicates.PredicateSpec) map[string]predicates.Predica
 
 // processes a set of route definitions for the routing table
 func processRouteDefs(o Options, fr filters.Registry, defs []*eskip.Route) (routes []*Route, invalidDefs []*eskip.Route) {
-	cpm := mapPredicates(o.Predicates)
+	//cpm := mapPredicates(o.Predicates)
+	cpm := o.PredicateRegistry
 	for _, def := range defs {
 		route, err := processRouteDef(cpm, fr, def)
 		if err == nil {
